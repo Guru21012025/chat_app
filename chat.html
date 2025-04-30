@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Common Chat</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+  <style>
+    .message {
+      display: flex;
+      justify-content: flex-start; /* Align messages to the left */
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .message p {
+      margin: 0;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border-radius: 10px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+
+    .message-checkbox {
+      margin-right: 10px;
+    }
+
+    .message a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .message a:hover {
+      text-decoration: underline;
+    }
+
+    /* Popup Styles */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      position: relative;
+    }
+
+    .close-button {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    .modal-content button {
+      margin: 10px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #modifyText {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h3 id="chatHeader">Common Area</h3>
+    <div id="chatBox"></div>
+
+    <div id="commonActions" style="display: none; margin-top: 10px;">
+      <button id="commonDelete" onclick="handleCommonDelete()">Delete</button>
+      <button id="commonModify" onclick="handleCommonModify()">Modify</button>
+    </div>
+
+    <form id="chatForm">
+      <textarea id="message" name="message" placeholder="Type your message..." required></textarea>
+      <button type="submit">Send Message</button>
+    </form>
+
+    <form id="fileForm" enctype="multipart/form-data">
+      <input type="file" id="file" name="file" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.mp4,.mp3,.zip,.txt">
+      <button type="submit">Upload File</button>
+      <div id="upload-progress" style="display:none;">
+        <progress id="file-progress" value="0" max="100"></progress>
+        <span id="progress-label">0%</span>
+      </div>
+    </form>
+
+    <button onclick="window.location.href='private_chat.php';">Private Chat</button>
+    <button onclick="showLogoutPopup()">Logout</button>
+  </div>
+
+  <!-- Popup Alert Structure -->
+  <div id="popup" class="popup">
+    <div class="popup-content">
+      <span class="close-button" onclick="closePopup()">&times;</span>
+      <p id="popup-message"></p>
+      <button id="popup-confirm" style="display:none;" onclick="confirmPopup()">OK</button>
+      <button id="popup-cancel" style="display:none;" onclick="cancelPopup()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chatBox');
+    const chatForm = document.getElementById('chatForm');
+    const fileForm = document.getElementById('fileForm');
+
+    // Popup Functions
+    function showPopup(message, type = 'alert', confirmCallback = null, cancelCallback = null) {
+      const popup = document.getElementById('popup');
+      const popupMessage = document.getElementById('popup-message');
+      const confirmButton = document.getElementById('popup-confirm');
+      const cancelButton = document.getElementById('popup-cancel');
+
+      popupMessage.textContent = message;
+      confirmButton.style.display = 'none';
+      cancelButton.style.display = 'none';
+
+      if (type === 'confirm') {
+        confirmButton.style.display = 'inline-block';
+        cancelButton.style.display = 'inline-block';
+        confirmButton.onclick = () => {
+          confirmCallback();
+          closePopup();
+        };
+        cancelButton.onclick = () => {
+          cancelCallback();
+          closePopup();
+        };
+      }
+
+      popup.style.display = 'flex';
+    }
+
+    function closePopup() {
+      document.getElementById('popup').style.display = 'none';
+    }
+
+    async function fetchMessages() {
+      const res = await fetch('chat.php');
+      const data = await res.json();
+      const encryptionKey = "your-secret-key"; // Replace with a strong key
+      chatBox.innerHTML = data.data.map(m => {
+        let decryptedMessage = m.message;
+        try {
+          const bytes = CryptoJS.AES.decrypt(m.message, encryptionKey);
+          decryptedMessage = bytes.toString(CryptoJS.enc.Utf8);
+          if (!decryptedMessage) {
+            decryptedMessage = "Failed to decrypt";
+          }
+        } catch (e) {
+          console.error("Decryption error:", e);
+          decryptedMessage = "Decryption Error";
+        }
+        const isChecked = false; // Adjust as needed for checked state
+        let content = `<div class="message" data-id="${m.id}" data-user-id="${data.loggedInUserId}">
+          <input type="checkbox" class="message-checkbox" ${isChecked ? 'checked' : ''} onchange="updateCommonActionsVisibility()" data-message-user-id="${m.user_id}">
+          <p title="Sent by ${m.username}"><b>${m.username}:</b> ${decryptedMessage || ''}
+          <span style="font-size: 0.8em; color: gray;">(${new Date(m.time).toLocaleString()})</span></p>`;
+        if (m.file_path) {
+          content += ` <a href="${m.file_path}" target="_blank" download title="Sent by ${m.username}">${m.file_path.split('/').pop()}</a>`;
+        }
+        content += `</p></div>`;
+        return content;
+      }).join('');
+      chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+    }
+
+    chatForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const message = document.getElementById("message").value;
+      const encryptionKey = "your-secret-key"; // Replace with a strong key
+      const encryptedMessage = CryptoJS.AES.encrypt(message, encryptionKey).toString();
+      const formData = new FormData(chatForm);
+      formData.set('message', encryptedMessage); // Override with encrypted message
+      const res = await fetch('chat.php', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) {
+        fetchMessages();
+        chatForm.reset();
+      } else {
+        showPopup(data.error);
+      }
+    };
+
+    fileForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const formData = new FormData(fileForm);
+
+      const progressDiv = document.getElementById('upload-progress');
+      const progressBar = document.getElementById('file-progress');
+      const progressLabel = document.getElementById('progress-label');
+
+      progressDiv.style.display = 'block';
+      progressBar.value = 0;
+      progressLabel.innerText = '0%';
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'chat.php', true);
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = (event.loaded / event.total) * 100;
+          progressBar.value = percentComplete;
+          progressLabel.innerText = Math.round(percentComplete) + '%';
+        }
+      };
+
+      xhr.onload = () => {
+        progressDiv.style.display = 'none';
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success) {
+            fetchMessages();
+            fileForm.reset();
+            showPopup("File uploaded successfully!");
+          } else {
+            showPopup(data.error);
+          }
+        } else {
+          showPopup("An error occurred during the upload.");
+        }
+      };
+
+      xhr.onerror = () => {
+        progressDiv.style.display = 'none';
+        showPopup("An error occurred during the upload.");
+      };
+
+      xhr.send(formData);
+    };
+
+    function updateCommonActionsVisibility() {
+      const checkboxes = document.querySelectorAll('.message-checkbox:checked');
+      const commonActions = document.getElementById('commonActions');
+      commonActions.style.display = checkboxes.length > 0 ? 'block' : 'none';
+    }
+
+    function handleCommonDelete() {
+      const checkboxes = document.querySelectorAll('.message-checkbox:checked');
+      const idsToDelete = Array.from(checkboxes)
+        .filter(checkbox => checkbox.dataset.messageUserId == document.querySelector('.message').dataset.userId)
+        .map(cb => cb.closest('.message').dataset.id);
+      if (idsToDelete.length > 0) {
+        showPopup(
+          "Are you sure you want to delete the selected messages?",
+          'confirm',
+          async () => {
+            let allSuccess = true;
+            for (const id of idsToDelete) {
+              const res = await fetch('chat.php', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delete_id: id })
+              });
+              const data = await res.json();
+              if (!data.success) {
+                showPopup(`Failed to delete message with ID: ${id}`);
+                allSuccess = false;
+              }
+            }
+            fetchMessages();
+            if (allSuccess) {
+              showPopup("Messages deleted successfully!");
+            }
+          },
+          () => { } // Cancel callback
+        );
+      } else {
+        showPopup("Please select at least one message to delete.");
+      }
+    }
+
+    function handleCommonModify() {
+      const checkbox = document.querySelector('.message-checkbox:checked');
+      if (checkbox && checkbox.dataset.messageUserId == document.querySelector('.message').dataset.userId) {
+        const selectedMessage = checkbox.closest('.message');
+        const messageText = selectedMessage.querySelector('p').textContent.split(': ')[1];
+        showPopup(
+          "Modify your message:",
+          'prompt',
+          async (newMessage) => {
+            if (newMessage !== null) {
+              const id = selectedMessage.dataset.id;
+              const res = await fetch('chat.php', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ modify_id: id, message: newMessage })
+              });
+              const data = await res.json();
+              if (data.success) {
+                fetchMessages();
+                showPopup("Message modified successfully!");
+              } else {
+                showPopup(data.error);
+              }
+            }
+          },
+          () => { } // Cancel callback
+        );
+      } else {
+        showPopup("Please select a message to modify.");
+      }
+    }
+
+    function showLogoutPopup() {
+      showPopup(
+        "Thank you, come again!",
+        'confirm',
+        () => {
+          fetch('logout.php').then(() => window.location.href = 'index.html');
+        },
+        () => { } // Cancel callback
+      );
+    }
+
+    window.onload = fetchMessages;
+  </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+/* General reset */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 20px;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+}
+
+form {
+  max-width: 300px;
+  margin: 10px auto;
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 90%;
+  padding: 10px;
+  margin: 6px 0 12px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Apply full-width only to buttons in forms (login/register) */
+form button {
+  width: 100%;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Centering layout */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Chat Page Styles */
+#chatBox {
+  max-width: 600px;
+  margin: 20px auto;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  height: 300px;
+  overflow-y: auto; /* Ensure vertical scrolling is enabled */
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+#chatBox::-webkit-scrollbar {
+  width: 8px; /* Customize scrollbar width */
+}
+
+#chatBox::-webkit-scrollbar-thumb {
+  background-color: #ccc; /* Customize scrollbar thumb color */
+  border-radius: 4px;
+}
+
+#chatBox::-webkit-scrollbar-thumb:hover {
+  background-color: #aaa; /* Change color on hover */
+}
+
+#chatBox p {
+  margin: 6px 0;
+  padding: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+#chatBox a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+#chatBox a:hover {
+  text-decoration: underline;
+}
+
+#chatForm {
+  max-width: 600px;
+  margin: 10px auto;
+  display: flex;
+  gap: 10px;
+}
+
+#message {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#chatForm button {
+  width: auto;
+  padding: 10px 20px;
+}
+
+button.logout-btn {
+  display: block;
+  margin: 20px auto;
+  background-color: #dc3545;
+}
+
+button.logout-btn:hover {
+  background-color: #a71d2a;
+}
+
+.logout-top {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  background-color: #dc3545;
+  color: white;
+  padding: 5px 10px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-top:hover {
+  background-color: #a71d2a;
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.message-checkbox {
+  margin-right: 10px;
+}
+
+.delete-btn, .modify-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modify-btn {
+  background-color: #007bff;
+}
+
+.delete-btn:hover {
+  background-color: #a71d2a;
+}
+
+.modify-btn:hover {
+  background-color: #0056b3;
+}
+
+#commonActions {
+  text-align: center;
+}
+
+#commonActions button {
+  margin: 0 5px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#commonActions #commonDelete {
+  background-color: #dc3545;
+  color: white;
+}
+
+#commonActions #commonModify {
+  background-color: #007bff;
+  color: white;
+}
+
+#commonActions #commonDelete:hover {
+  background-color: #a71d2a;
+}
+
+#commonActions #commonModify:hover {
+  background-color: #0056b3;
+}
+
+#chatHeader {
+  text-align: center;
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
